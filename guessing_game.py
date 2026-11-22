@@ -1,7 +1,9 @@
 import random
+high_score = float("inf")
 
 
 def play_game():
+    global high_score
     print("welcome.")
     print("choose a difficulty game")
     print("easy 1-50")
@@ -34,6 +36,9 @@ def play_game():
                 print("too high")
             else:
                 print('you win')
+                print(attempts)
+                if attempts < high_score:
+                    high_score = attempts
                 break
         except ValueError:
             print("entter valid number")
