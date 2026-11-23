@@ -1,0 +1,58 @@
+import os
+import shutil
+
+# مسیری که می‌خوایم فایل‌ها رو مرتب کنیم (برای تست، یک پوشه روی دسکتاپ بساز)
+# مسیر پوشه دانلودها (Downloads) در ویندوز به طور معمول این است:
+TARGET_DIR = r"C:\Users\VISION\Downloads\TestFolder"
+
+# تعریف دسته‌بندی‌ها و پسوندهای مربوط به هرکدام
+FILE_TYPES = {
+    "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp"],
+    "Documents": [".pdf", ".docx", ".doc", ".txt", ".xlsx"],
+    "Videos": [".mp4", ".mkv", ".avi", ".mov"],
+    "Music": [".mp3", ".wav", ".flac"],
+    "Archives": [".zip", ".rar", ".7z"]
+}
+
+
+def organize_files(directory):
+    # بررسی اینکه آیا مسیر وجود دارد یا نه
+    if not os.path.exists(directory):
+        print(f"Error: The directory '{directory}' does not exist.")
+        return
+
+    print(f"Organizing files in: {directory}...")
+
+    # گرفتن لیست همه فایل‌های داخل پوشه
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+
+        # اگر یک فایل بود (نه یک پوشه)
+        if os.path.isfile(file_path):
+            # گرفتن پسوند فایل (مثل .jpg)
+            file_ext = os.path.splitext(filename)[1].lower()
+
+            # پیدا کردن پوشه مناسب برای این فایل
+            folder_name = "Others"  # اگر پسوند ناشناخته بود، بره توی پوشه Others
+            for category, extensions in FILE_TYPES.items():
+                if file_ext in extensions:
+                    folder_name = category
+                    break
+
+            # ساختن پوشه مقصد اگر وجود نداشته باشه
+            dest_folder = os.path.join(directory, folder_name)
+            if not os.path.exists(dest_folder):
+                os.makedirs(dest_folder)
+
+            # جابجا کردن فایل به پوشه مقصد
+            dest_path = os.path.join(dest_folder, filename)
+            try:
+                shutil.move(file_path, dest_path)
+                print(f"Moved: {filename} -> {folder_name}/")
+            except Exception as e:
+                print(f"Error moving {filename}: {e}")
+
+
+if __name__ == "__main__":
+    organize_files(TARGET_DIR)
+    print("Done! All files are organized.")
