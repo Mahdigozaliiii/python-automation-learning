@@ -1,4 +1,5 @@
 import time
+import csv
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
@@ -12,23 +13,23 @@ def scrape_digikala():
     options = Options()
     driver = webdriver.Edge(options=options)
 
+    # لیستی برای ذخیره اطلاعات محصولات
+    scraped_data = []
+
     try:
         driver.get(url)
         print("Waiting for products to load...")
 
-        # صبر می‌کنیم تا کارت‌های محصول واقعاً در صفحه ظاهر بشن
         wait = WebDriverWait(driver, 20)
-
-        # این کلاس رو از خروجی ترمینال خودت پیدا کردیم
         product_class = "styles-module-scss-module__IjzMIG__ProductList__item"
         products = wait.until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, product_class)))
 
         print(f"Found {len(products)} products. Extracting data...\n")
 
-        for product in products[:5]:
+        for product in products:
             try:
-                # پیدا کردن اسم محصول (معمولاً داخل تگ h3 یا h2 است)
+                # پیدا کردن اسم
                 title = product.find_element(By.TAG_NAME, "h3").text
                 if not title:
                     title = product.find_element(By.TAG_NAME, "h2").text
@@ -38,15 +39,28 @@ def scrape_digikala():
                     price = product.find_element(
                         By.CSS_SELECTOR, "span[data-testid='price-final']").text
                 except:
-                    # روش جایگزین برای پیدا کردن قیمت
-                    price = product.text.split("\n")[-1]
+                    price = "نامشخص"
 
-                print(f"Title: {title}")
-                print(f"Price: {price}")
-                print("-" * 30)
+                # اضافه کردن به لیست
+                scraped_data.append({"Title": title, "Price": price})
+
+                # فقط ۳۰ کاراکتر اول رو چاپ میکنه تا ترمینال شلوغ نشه
+                print(f"Extracted: {title[:30]}...")
+
             except Exception as e:
-                # اگر یکی از محصولات ساختارش فرق داشت، ازش رد میشیم
                 continue
+
+        # ذخیره در فایل CSV
+        if scraped_data:
+            filename = "digikala_laptops.csv"
+            with open(filename, mode='w', newline='', encoding='utf-8-sig') as file:
+                writer = csv.DictWriter(file, fieldnames=["Title", "Price"])
+                writer.writeheader()
+                writer.writerows(scraped_data)
+            print(
+                f"\n✅ Successfully saved {len(scraped_data)} products to {filename}")
+        else:
+            print("\n❌ No data was scraped.")
 
     except Exception as e:
         print(f"An error occurred: {e}")
